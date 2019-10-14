@@ -4,7 +4,7 @@ namespace Xigen\StockUpload\Controller\Adminhtml\Import;
 
 use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
-use Xigen\StockUpload\Model\Import\AdvancedPricing;
+use Xigen\StockUpload\Model\Import\Stock;
 
 /**
  * Ajax controller
@@ -84,24 +84,24 @@ class Ajax extends \Magento\Backend\App\Action
             $processArray[$priceEntry['sku']][] = $priceEntry;
         }
 
-        foreach ($processArray as $sku => $tierPricing) {
+        foreach ($processArray as $sku => $stocks) {
             $importData = [];
             try {
-                foreach ($tierPricing as $tierPrice) {
-                    if (!isset($tierPrice['sku'])) {
+                foreach ($stocks as $stock) {
+                    if (!isset($stock['sku'])) {
                         throw new LocalizedException(__('Problem with data'));
                     }
-                    $product = $this->importHelper->get($tierPrice['sku']);
+                    $product = $this->importHelper->get($stock['sku']);
                     if (!$product) {
                         $this->csvImportHelper->deleteImportBySku($sku);
                         continue;
                     }
-                    $importData = $tierPricing;
+                    $importData = $stocks;
                 }
 
                 if ($importData) {
-                    $this->tier = $this->_objectManager->create(AdvancedPricing::class);
-                    $this->tier->saveAdvancedPrices($importData, $type);
+                    $this->stock = $this->_objectManager->create(Stock::class);
+                    $this->stock->saveStocks($importData, $type);
                 }
 
                 $this->csvImportHelper->deleteImportBySku($sku);

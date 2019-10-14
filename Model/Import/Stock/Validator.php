@@ -3,7 +3,7 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-namespace Xigen\StockUpload\Model\Import\AdvancedPricing;
+namespace Xigen\StockUpload\Model\Import\Stock;
 
 use Magento\CatalogImportExport\Model\Import\Product\RowValidatorInterface;
 use \Magento\Framework\Validator\AbstractValidator;

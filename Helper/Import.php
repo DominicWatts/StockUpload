@@ -64,15 +64,4 @@ class Import extends AbstractHelper
             return false;
         }
     }
-
-    /**
-     * Get customer group by code
-     * @param string $groupCode
-     * @return \Magento\Customer\Model\Group
-     */
-    public function loadCustomerGroupByCode($groupCode)
-    {
-        return $this->groupFactory->create()
-            ->load($groupCode, 'customer_group_code');
-    }
 }

@@ -8,7 +8,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Xigen\StockUpload\Model\Import\AdvancedPricing;
+use Xigen\StockUpload\Model\Import\Stock;
 
 /**
  * Import console
@@ -58,7 +58,7 @@ class Import extends Command
     private $_objectManager;
 
     /**
-     * @var Xigen\StockUpload\Model\Import\AdvancedPricing
+     * @var Xigen\StockUpload\Model\Import\Stock
      */
     private $tier;
 
@@ -114,29 +114,29 @@ class Import extends Command
                 $processArray[$priceEntry['sku']][] = $priceEntry;
             }
 
-            foreach ($processArray as $sku => $tierPricing) {
+            foreach ($processArray as $sku => $stocks) {
                 $importData = [];
 
-                foreach ($tierPricing as $tierPrice) {
-                    if (!isset($tierPrice['sku'])) {
+                foreach ($stocks as $stock) {
+                    if (!isset($stock['sku'])) {
                         throw new LocalizedException(__('Problem with data'));
                     }
 
-                    $product = $this->importHelper->get($tierPrice['sku']);
+                    $product = $this->importHelper->get($stock['sku']);
                     if (!$product) {
-                        $this->output->writeln((string) __('[%1] Sku not found : %2', $this->dateTime->gmtDate(), $tierPrice['sku']));
+                        $this->output->writeln((string) __('[%1] Sku not found : %2', $this->dateTime->gmtDate(), $stock['sku']));
                         $this->csvImportHelper->deleteImportBySku($sku);
                         continue;
                     }
 
-                    $importData = $tierPricing;
+                    $importData = $stocks;
 
                     $progress->advance();
                 }
 
                 if ($importData) {
-                    $this->tier = $this->_objectManager->create(AdvancedPricing::class);
-                    $this->tier->saveAdvancedPrices($importData, \Magento\ImportExport\Model\Import::BEHAVIOR_REPLACE);
+                    $this->stock = $this->_objectManager->create(Stock::class);
+                    $this->stock->saveStocks($importData, \Magento\ImportExport\Model\Import::BEHAVIOR_REPLACE);
                     $this->output->writeln((string) __('[%1] Sku processed : %2', $this->dateTime->gmtDate(), $sku));
                     $this->csvImportHelper->deleteImportBySku($sku);
                 }
@@ -155,7 +155,7 @@ class Import extends Command
     protected function configure()
     {
         $this->setName("xigen:stock:import");
-        $this->setDescription("Process to import tier pricing");
+        $this->setDescription("Process to import stock");
         $this->setDefinition([
             new InputArgument(self::IMPORT_ARGUMENT, InputArgument::REQUIRED, 'Import'),
         ]);
