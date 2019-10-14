@@ -1,0 +1,12 @@
+<?xml version="1.0" ?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Acl/etc/acl.xsd">
+    <acl>
+        <resources>
+            <resource id="Magento_Backend::admin">
+                <resource id="Xigen_StockUpload::xigen_stockupload" sortOrder="10" title="xigen stockupload">
+                    <resource id="Xigen_StockUpload::import_index" sortOrder="10" title="import index"/>
+                </resource>
+            </resource>
+        </resources>
+    </acl>
+</config>

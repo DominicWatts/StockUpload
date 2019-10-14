@@ -1,0 +1,6 @@
+<?xml version="1.0" ?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
+    <menu>
+        <add action="xigen_stockupload/import/index" id="Xigen_StockUpload::import_index" module="Xigen_StockUpload" parent="Xigen_CsvUpload::csv" resource="Xigen_StockUpload::import_index" sortOrder="9999" title="Tier Pricing Import"/>
+    </menu>
+</config>
