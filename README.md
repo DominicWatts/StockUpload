@@ -1,4 +1,4 @@
-# Tier Price Upload # 
+# Stock Upload # 
 
 # Install instructions #
 

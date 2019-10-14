@@ -8,33 +8,24 @@ namespace Xigen\StockUpload\Model\Import;
 use Magento\CatalogImportExport\Model\Import\Product as ImportProduct;
 use Magento\CatalogImportExport\Model\Import\Product\RowValidatorInterface as ValidatorInterface;
 use Magento\ImportExport\Model\Import\ErrorProcessing\ProcessingErrorAggregatorInterface;
+use Xigen\StockUpload\Model\Import\Stock\Validator\ValidatorInterface as CustomInterface;
 
 /**
- * Class AdvancedPricing
+ * Class Stock
  *
  * @SuppressWarnings(PHPMD.ExcessiveParameterList)
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.TooManyFields)
  */
-class AdvancedPricing extends \Magento\ImportExport\Model\Import\Entity\AbstractEntity
+class Stock extends \Magento\ImportExport\Model\Import\Entity\AbstractEntity
 {
-    const VALUE_ALL_GROUPS = 'ALL GROUPS';
-    const VALUE_ALL_WEBSITES = 'All Websites';
     const COL_SKU = 'sku';
-    const COL_TIER_PRICE_WEBSITE = 'tier_price_website';
-    const COL_TIER_PRICE_CUSTOMER_GROUP = 'tier_price_customer_group';
-    const COL_TIER_PRICE_QTY = 'tier_price_qty';
-    const COL_TIER_PRICE = 'tier_price';
-    const COL_TIER_PRICE_PERCENTAGE_VALUE = 'percentage_value';
-    const COL_TIER_PRICE_TYPE = 'tier_price_value_type';
-    const TIER_PRICE_TYPE_FIXED = 'Fixed';
-    const TIER_PRICE_TYPE_PERCENT = 'Discount';
-    const TABLE_TIER_PRICE = 'catalog_product_entity_tier_price';
-    const DEFAULT_ALL_GROUPS_GROUPED_PRICE_VALUE = '0';
-    const ENTITY_TYPE_CODE = 'advanced_pricing';
+    const COL_QTY = 'quantity';
     const VALIDATOR_MAIN = 'validator';
-    const VALIDATOR_WEBSITE = 'validator_website';
-    const VALIDATOR_TEAR_PRICE = 'validator_tear_price';
+    const TABLE_STOCK = 'cataloginventory_stock_item';
+    const VALIDATOR_QTY = 'validator_quantity';
+    const VALIDATOR_SKU = 'validator_sku';
+    const PRODUCT_ID = 'product_id';
 
     /**
      * Validation failure message template definitions.
@@ -45,12 +36,8 @@ class AdvancedPricing extends \Magento\ImportExport\Model\Import\Entity\Abstract
         ValidatorInterface::ERROR_INVALID_WEBSITE => 'Invalid value in Website column (website does not exists?)',
         ValidatorInterface::ERROR_SKU_IS_EMPTY => 'SKU is empty',
         ValidatorInterface::ERROR_SKU_NOT_FOUND_FOR_DELETE => 'Product with specified SKU not found',
-        ValidatorInterface::ERROR_INVALID_TIER_PRICE_QTY => 'Tier Price data price or quantity value is invalid',
-        ValidatorInterface::ERROR_INVALID_TIER_PRICE_SITE => 'Tier Price data website is invalid',
-        ValidatorInterface::ERROR_INVALID_TIER_PRICE_GROUP => 'Tier Price customer group is invalid',
-        ValidatorInterface::ERROR_INVALID_TIER_PRICE_TYPE => 'Value for \'tier_price_value_type\' ' .
-            'attribute contains incorrect value, acceptable values are Fixed, Discount',
-        ValidatorInterface::ERROR_TIER_DATA_INCOMPLETE => 'Tier Price data is incomplete',
+        CustomInterface::ERROR_INVALID_QTY => 'Stock data price or quantity value is invalid',
+        ValidatorInterface::ERROR_TIER_DATA_INCOMPLETE => 'Stock data is incomplete',
         ValidatorInterface::ERROR_INVALID_ATTRIBUTE_DECIMAL =>
             'Value for \'%s\' attribute contains incorrect value, acceptable values are in decimal format',
     ];
@@ -69,11 +56,7 @@ class AdvancedPricing extends \Magento\ImportExport\Model\Import\Entity\Abstract
      */
     protected $validColumnNames = [
         self::COL_SKU,
-        self::COL_TIER_PRICE_WEBSITE,
-        self::COL_TIER_PRICE_CUSTOMER_GROUP,
-        self::COL_TIER_PRICE_QTY,
-        self::COL_TIER_PRICE,
-        self::COL_TIER_PRICE_TYPE
+        self::COL_QTY,
     ];
 
     /**
@@ -165,9 +148,9 @@ class AdvancedPricing extends \Magento\ImportExport\Model\Import\Entity\Abstract
      * @param \Magento\Catalog\Helper\Data $catalogData
      * @param ImportProduct\StoreResolver $storeResolver
      * @param ImportProduct $importProduct
-     * @param AdvancedPricing\Validator $validator
-     * @param AdvancedPricing\Validator\Website $websiteValidator
-     * @param AdvancedPricing\Validator\TierPrice $tierPriceValidator
+     * @param Stock\Validator $validator
+     * @param Stock\Validator\QtyValidator $quantityValidator
+     * @param Stock\Validator\SkuValidator $skuValidator
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function __construct(
@@ -185,9 +168,9 @@ class AdvancedPricing extends \Magento\ImportExport\Model\Import\Entity\Abstract
         \Magento\Catalog\Helper\Data $catalogData,
         \Magento\CatalogImportExport\Model\Import\Product\StoreResolver $storeResolver,
         ImportProduct $importProduct,
-        AdvancedPricing\Validator $validator,
-        AdvancedPricing\Validator\Website $websiteValidator,
-        AdvancedPricing\Validator\TierPrice $tierPriceValidator
+        Stock\Validator $validator,
+        Stock\Validator\QtyValidator $quantityValidator,
+        Stock\Validator\SkuValidator $skuValidator
     ) {
         $this->dateTime = $dateTime;
         $this->jsonHelper = $jsonHelper;
@@ -203,8 +186,8 @@ class AdvancedPricing extends \Magento\ImportExport\Model\Import\Entity\Abstract
         $this->_validators[self::VALIDATOR_MAIN] = $validator->init($this);
         $this->_catalogProductEntity = $this->_resourceFactory->create()->getTable('catalog_product_entity');
         $this->_oldSkus = $this->retrieveOldSkus();
-        $this->_validators[self::VALIDATOR_WEBSITE] = $websiteValidator;
-        $this->_validators[self::VALIDATOR_TEAR_PRICE] = $tierPriceValidator;
+        $this->_validators[self::VALIDATOR_QTY] = $quantityValidator;
+        $this->_validators[self::VALIDATOR_SKU] = $skuValidator;
         $this->errorAggregator = $errorAggregator;
 
         foreach (array_merge($this->errorMessageTemplates, $this->_messageTemplates) as $errorCode => $message) {
@@ -216,7 +199,7 @@ class AdvancedPricing extends \Magento\ImportExport\Model\Import\Entity\Abstract
      * Validator object getter.
      *
      * @param string $type
-     * @return AdvancedPricing\Validator|AdvancedPricing\Validator\Website
+     * @return Stock\Validator|Stock\Validator\QtyValidator
      */
     protected function _getValidator($type)
     {
@@ -224,7 +207,7 @@ class AdvancedPricing extends \Magento\ImportExport\Model\Import\Entity\Abstract
     }
 
     /**
-     * Create Advanced price data from raw data.
+     * Create stock data from raw data.
      *
      * @throws \Exception
      * @return bool Result of operation.
@@ -232,11 +215,11 @@ class AdvancedPricing extends \Magento\ImportExport\Model\Import\Entity\Abstract
     protected function _importData()
     {
         if (\Magento\ImportExport\Model\Import::BEHAVIOR_DELETE == $this->getBehavior()) {
-            $this->deleteAdvancedPricing();
+            $this->deleteStock();
         } elseif (\Magento\ImportExport\Model\Import::BEHAVIOR_REPLACE == $this->getBehavior()) {
-            $this->replaceAdvancedPricing();
+            $this->replaceStock();
         } elseif (\Magento\ImportExport\Model\Import::BEHAVIOR_APPEND == $this->getBehavior()) {
-            $this->saveAdvancedPricing();
+            $this->saveStock();
         }
 
         return true;
@@ -249,7 +232,7 @@ class AdvancedPricing extends \Magento\ImportExport\Model\Import\Entity\Abstract
      */
     public function getEntityTypeCode()
     {
-        return 'advanced_pricing';
+        return 'cataloginventory_stock';
     }
 
     /**
@@ -289,11 +272,11 @@ class AdvancedPricing extends \Magento\ImportExport\Model\Import\Entity\Abstract
     }
 
     /**
-     * Deletes Advanced price data from raw data
+     * Deletes stock data from raw data
      * @param array $importData
      * @return $this
      */
-    public function deleteAdvancedPricing($importData)
+    public function deleteStock($importData)
     {
         $this->_cachedSkuToDelete = null;
         $listSku = [];
@@ -309,21 +292,21 @@ class AdvancedPricing extends \Magento\ImportExport\Model\Import\Entity\Abstract
         }
         
         if ($listSku) {
-            $this->deleteProductTierPrices(array_unique($listSku), self::TABLE_TIER_PRICE);
+            $this->deleteProductStocks(array_unique($listSku), self::TABLE_STOCK);
             $this->setUpdatedAt($listSku);
         }
         return $this;
     }
 
     /**
-     * Deletes advanced price data from raw data
+     * Deletes stock data from raw data
      * @param array $importData
      * @param string $behavior
      * @return void
      */
-    public function saveAdvancedPrices($importData, $behavior)
+    public function saveStocks($importData, $behavior)
     {
-        $tierPrices = [];
+        $stocks = [];
         $listSku = [];
 
         if (!$behavior) {
@@ -342,35 +325,15 @@ class AdvancedPricing extends \Magento\ImportExport\Model\Import\Entity\Abstract
 
             $rowSku = $rowData[self::COL_SKU];
             $listSku[] = $rowSku;
-            if (!empty($rowData[self::COL_TIER_PRICE_WEBSITE])) {
-                $tierPrices[$rowSku][] = [
-                    'all_groups' => $rowData[self::COL_TIER_PRICE_CUSTOMER_GROUP] == self::VALUE_ALL_GROUPS,
-                    'customer_group_id' => $this->getCustomerGroupId(
-                        $rowData[self::COL_TIER_PRICE_CUSTOMER_GROUP]
-                    ),
-                    'qty' => $rowData[self::COL_TIER_PRICE_QTY],
-                    'value' => $rowData[self::COL_TIER_PRICE_TYPE] === self::TIER_PRICE_TYPE_FIXED
-                        ? $rowData[self::COL_TIER_PRICE] : 0,
-                    'percentage_value' => $rowData[self::COL_TIER_PRICE_TYPE] === self::TIER_PRICE_TYPE_PERCENT
-                        ? $rowData[self::COL_TIER_PRICE] : null,
-                    'website_id' => $this->getWebSiteId($rowData[self::COL_TIER_PRICE_WEBSITE])
-                ];
-            }
+            $stocks[$rowSku][] = [
+                'qty' => $rowData[self::COL_QTY],
+            ];
         }
 
         if ($behavior == \Magento\ImportExport\Model\Import::BEHAVIOR_REPLACE) {
             if ($listSku) {
-                $this->processCountNewPrices($tierPrices);
-                if ($this->deleteProductTierPrices(array_unique($listSku), self::TABLE_TIER_PRICE)) {
-                    $this->saveProductPrices($tierPrices, self::TABLE_TIER_PRICE);
-                    $this->setUpdatedAt($listSku);
-                }
-            }
-        } elseif ($behavior == \Magento\ImportExport\Model\Import::BEHAVIOR_APPEND) {
-            $this->processCountExistingPrices($tierPrices, self::TABLE_TIER_PRICE)
-                ->processCountNewPrices($tierPrices);
-            $this->saveProductPrices($tierPrices, self::TABLE_TIER_PRICE);
-            if ($listSku) {
+                $this->processCountNewStocks($stocks);
+                $this->saveProductStocks($stocks, self::TABLE_STOCK);
                 $this->setUpdatedAt($listSku);
             }
         }
@@ -378,71 +341,32 @@ class AdvancedPricing extends \Magento\ImportExport\Model\Import\Entity\Abstract
     }
 
     /**
-     * Save product prices.
+     * Save product stock.
      *
      * @param array $priceData
      * @param string $table
      * @return $this
      */
-    protected function saveProductPrices(array $priceData, $table)
+    protected function saveProductStocks(array $priceData, $table)
     {
         if ($priceData) {
             $tableName = $this->_resourceFactory->create()->getTable($table);
-            $priceIn = [];
+            $stockIn = [];
             $entityIds = [];
             $oldSkus = $this->retrieveOldSkus();
             foreach ($priceData as $sku => $priceRows) {
                 if (isset($oldSkus[$sku])) {
                     $productId = $oldSkus[$sku];
                     foreach ($priceRows as $row) {
-                        $row[$this->getProductEntityLinkField()] = $productId;
-                        $priceIn[] = $row;
-                        $entityIds[] = $productId;
+                        $row[self::PRODUCT_ID] = $productId;
+                        if ($row) {
+                            $this->_connection->update($tableName, $row, [self::PRODUCT_ID . ' = ?' => $productId]);
+                        }
                     }
                 }
             }
-            if ($priceIn) {
-                $this->_connection->insertOnDuplicate($tableName, $priceIn, ['value', 'percentage_value']);
-            }
         }
         return $this;
-    }
-
-    /**
-     * Deletes tier prices prices.
-     *
-     * @param array $listSku
-     * @param string $table
-     * @return boolean
-     */
-    protected function deleteProductTierPrices(array $listSku, $table)
-    {
-        $tableName = $this->_resourceFactory->create()->getTable($table);
-        $productEntityLinkField = $this->getProductEntityLinkField();
-        if ($tableName && $listSku) {
-            if (!$this->_cachedSkuToDelete) {
-                $this->_cachedSkuToDelete = $this->_connection->fetchCol(
-                    $this->_connection->select()
-                        ->from($this->_catalogProductEntity, $productEntityLinkField)
-                        ->where('sku IN (?)', $listSku)
-                );
-            }
-            if ($this->_cachedSkuToDelete) {
-                try {
-                    $this->countItemsDeleted += $this->_connection->delete(
-                        $tableName,
-                        $this->_connection->quoteInto($productEntityLinkField . ' IN (?)', $this->_cachedSkuToDelete)
-                    );
-                    return true;
-                } catch (\Exception $e) {
-                    return false;
-                }
-            } else {
-                $this->addRowError(ValidatorInterface::ERROR_SKU_IS_EMPTY, 0);
-                return false;
-            }
-        }
-        return false;
     }
 
     /**
@@ -460,31 +384,6 @@ class AdvancedPricing extends \Magento\ImportExport\Model\Import\Entity\Abstract
             $this->_connection->quoteInto('sku IN (?)', array_unique($listSku))
         );
         return $this;
-    }
-
-    /**
-     * Get website id by code
-     *
-     * @param string $websiteCode
-     * @return array|int|string
-     */
-    protected function getWebSiteId($websiteCode)
-    {
-        $result = $websiteCode == $this->_getValidator(self::VALIDATOR_WEBSITE)->getAllWebsitesValue() ||
-        $this->_catalogData->isPriceGlobal() ? 0 : $this->_storeResolver->getWebsiteCodeToId($websiteCode);
-        return $result;
-    }
-
-    /**
-     * Get customer group id
-     *
-     * @param string $customerGroup
-     * @return int
-     */
-    protected function getCustomerGroupId($customerGroup)
-    {
-        $customerGroups = $this->_getValidator(self::VALIDATOR_TEAR_PRICE)->getCustomerGroups();
-        return $customerGroup == self::VALUE_ALL_GROUPS ? 0 : $customerGroups[$customerGroup];
     }
 
     /**
@@ -508,14 +407,14 @@ class AdvancedPricing extends \Magento\ImportExport\Model\Import\Entity\Abstract
     /**
      * Count existing prices
      *
-     * @param array $prices
+     * @param array $stocks
      * @param string $table
      * @return $this
      */
-    protected function processCountExistingPrices($prices, $table)
+    protected function processCountExistingStocks($stocks, $table)
     {
         $oldSkus = $this->retrieveOldSkus();
-        $existProductIds = array_intersect_key($oldSkus, $prices);
+        $existProductIds = array_intersect_key($oldSkus, $stocks);
         if (!count($existProductIds)) {
             return $this;
         }
@@ -525,11 +424,11 @@ class AdvancedPricing extends \Magento\ImportExport\Model\Import\Entity\Abstract
         $existingPrices = $this->_connection->fetchAssoc(
             $this->_connection->select()->from(
                 $tableName,
-                ['value_id', $productEntityLinkField, 'all_groups', 'customer_group_id']
+                ['value_id', $productEntityLinkField]
             )->where($productEntityLinkField . ' IN (?)', $existProductIds)
         );
         foreach ($existingPrices as $existingPrice) {
-            foreach ($prices as $sku => $skuPrices) {
+            foreach ($stocks as $sku => $skuPrices) {
                 if (isset($oldSkus[$sku]) && $existingPrice[$productEntityLinkField] == $oldSkus[$sku]) {
                     $this->incrementCounterUpdated($skuPrices, $existingPrice);
                 }
@@ -542,30 +441,26 @@ class AdvancedPricing extends \Magento\ImportExport\Model\Import\Entity\Abstract
     /**
      * Increment counter of updated items
      *
-     * @param array $prices
+     * @param array $stocks
      * @param array $existingPrice
      * @return void
      */
-    protected function incrementCounterUpdated($prices, $existingPrice)
+    protected function incrementCounterUpdated($stocks, $existingPrice)
     {
-        foreach ($prices as $price) {
-            if ($existingPrice['all_groups'] == $price['all_groups']
-                && $existingPrice['customer_group_id'] == $price['customer_group_id']
-            ) {
-                $this->countItemsUpdated++;
-            }
+        foreach ($stocks as $price) {
+            $this->countItemsUpdated++;
         }
     }
 
     /**
      * Count new prices
      *
-     * @param array $tierPrices
+     * @param array $stocks
      * @return $this
      */
-    protected function processCountNewPrices(array $tierPrices)
+    protected function processCountNewStocks(array $stocks)
     {
-        foreach ($tierPrices as $productPrices) {
+        foreach ($stocks as $productPrices) {
             $this->countItemsCreated += count($productPrices);
         }
         $this->countItemsCreated -= $this->countItemsUpdated;
