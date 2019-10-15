@@ -17,7 +17,7 @@ Once import queue has been built stock can be inserted a couple of ways
 
 ## Submit screen ##
 
-  
+![Submit](https://i.snipboard.io/oadeSf.jpg)
 
 ## Console commnad ## 
 
