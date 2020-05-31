@@ -1,5 +1,11 @@
 # Stock Upload # 
 
+![phpcs](https://github.com/DominicWatts/StockUpload/workflows/phpcs/badge.svg)
+
+![PHPCompatibility](https://github.com/DominicWatts/StockUpload/workflows/PHPCompatibility/badge.svg)
+
+![PHPStan](https://github.com/DominicWatts/StockUpload/workflows/PHPStan/badge.svg)
+
 # Install instructions #
 
 `composer require dominicwatts/stockupload`
