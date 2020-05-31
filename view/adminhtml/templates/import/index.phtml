@@ -1,15 +1,21 @@
 
-<a href="<?= $block->escapeUrl($block->getViewFileUrl('Xigen_StockUpload::template.csv'));?>" target="_blank"><?= $block->escapeHtml(__("CSV Template")); ?></a>
+<a href="<?= $block->escapeUrl($block->getViewFileUrl('Xigen_StockUpload::template.csv'));?>" 
+   target="_blank"><?= $block->escapeHtml(__("CSV Template")); ?></a>
 
-<?php if ($block->isImports()) : ?>
+<?php if ($block->isImports()): ?>
 
     <form method="post" enctype="multipart/form-data">
             <?=$block->getBlockHtml('formkey')?>
             <fieldset class="admin__fieldset admin__fieldset-import-service">
                 <div class="fieldset admin__field">
-                    <label for="import_simple_products" class="admin__field-label"><span><?= $block->escapeHtmlAttr(__('Replace Stock'))?></span></label>
+                    <label for="import_simple_products" class="admin__field-label">
+                        <span><?= $block->escapeHtmlAttr(__('Replace Stock'))?></span>
+                    </label>
                     <div class="admin__field-control">
-                        <button title="<?= $block->escapeHtmlAttr(__('Replace Stock'))?>" type="button" class="action-default scalable import-replace" data-ui-id="widget-button-0">
+                        <button title="<?= $block->escapeHtmlAttr(__('Replace Stock'))?>" 
+                                type="button" 
+                                class="action-default scalable import-replace" 
+                                data-ui-id="widget-button-0">
                             <span><?= $block->escapeHtmlAttr(__('Replace Stock'))?></span>
                         </button>
                     </div>
@@ -17,7 +23,7 @@
             </fieldset>
     </form>
 
-<?php else : ?>
+<?php else: ?>
 
     <h4><?= $block->escapeHtmlAttr(__("Nothing awaiting processing")); ?></h4>
     <br/>

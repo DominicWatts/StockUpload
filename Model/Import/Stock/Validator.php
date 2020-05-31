@@ -1,15 +1,12 @@
 <?php
-/**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
- */
+
 namespace Xigen\StockUpload\Model\Import\Stock;
 
 use Magento\CatalogImportExport\Model\Import\Product\RowValidatorInterface;
-use \Magento\Framework\Validator\AbstractValidator;
+use Magento\Framework\Validator\AbstractValidator;
 
 /**
- * Validator class
+ * Xigen StockUpload import stock model validator class
  */
 class Validator extends AbstractValidator implements RowValidatorInterface
 {

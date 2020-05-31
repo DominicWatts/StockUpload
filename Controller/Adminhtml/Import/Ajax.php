@@ -4,6 +4,7 @@ namespace Xigen\StockUpload\Controller\Adminhtml\Import;
 
 use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
+use Magento\Framework\Exception\LocalizedException;
 use Xigen\StockUpload\Model\Import\Stock;
 
 /**
@@ -30,6 +31,11 @@ class Ajax extends \Magento\Backend\App\Action
      * @var \Xigen\CsvUpload\Helper\Import
      */
     protected $csvImportHelper;
+
+    /**
+     * @var Xigen\StockUpload\Model\Import\Stock
+     */
+    protected $stock;
 
     /**
      * Ajax constructor.
@@ -109,7 +115,11 @@ class Ajax extends \Magento\Backend\App\Action
                 $collection = $this->csvImportHelper->getImports();
                 $collectionSize = $collection->getSize();
                 if ($collection->getSize() > 0) {
-                    return $this->returnJson('continue', __('%1 more %2 price(s) to process', $collectionSize, $type), $collectionSize);
+                    return $this->returnJson('continue', __(
+                        '%1 more %2 price(s) to process',
+                        $collectionSize,
+                        $type
+                    ), $collectionSize);
                 }
             } catch (\Exception $e) {
                 return $this->returnJson('finish', __('%1 - please check import data', $e->getMessage()), 0);

@@ -2,11 +2,11 @@
 
 namespace Xigen\StockUpload\Console\Command;
 
+use Magento\Framework\Exception\LocalizedException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Xigen\StockUpload\Model\Import\Stock;
 
@@ -61,6 +61,11 @@ class Import extends Command
      * @var Xigen\StockUpload\Model\Import\Stock
      */
     private $tier;
+
+    /**
+     * @var Xigen\StockUpload\Model\Import\Stock
+     */
+    protected $stock;
 
     /**
      * Import constructor.
@@ -124,7 +129,11 @@ class Import extends Command
 
                     $product = $this->importHelper->get($stock['sku']);
                     if (!$product) {
-                        $this->output->writeln((string) __('[%1] Sku not found : %2', $this->dateTime->gmtDate(), $stock['sku']));
+                        $this->output->writeln((string) __(
+                            '[%1] Sku not found : %2',
+                            $this->dateTime->gmtDate(),
+                            $stock['sku']
+                        ));
                         $this->csvImportHelper->deleteImportBySku($sku);
                         continue;
                     }

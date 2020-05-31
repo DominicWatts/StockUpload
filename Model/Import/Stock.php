@@ -1,21 +1,19 @@
 <?php
-/**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
- */
+
 namespace Xigen\StockUpload\Model\Import;
 
 use Magento\CatalogImportExport\Model\Import\Product as ImportProduct;
 use Magento\CatalogImportExport\Model\Import\Product\RowValidatorInterface as ValidatorInterface;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\ImportExport\Model\Import\ErrorProcessing\ProcessingErrorAggregatorInterface;
 use Xigen\StockUpload\Model\Import\Stock\Validator\ValidatorInterface as CustomInterface;
 
 /**
- * Class Stock
- *
+ * Xigen StockUpload import model stock
  * @SuppressWarnings(PHPMD.ExcessiveParameterList)
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.TooManyFields)
+ * phpcs:disable Generic.Files.LineLength
  */
 class Stock extends \Magento\ImportExport\Model\Import\Entity\AbstractEntity
 {
@@ -38,8 +36,7 @@ class Stock extends \Magento\ImportExport\Model\Import\Entity\AbstractEntity
         ValidatorInterface::ERROR_SKU_NOT_FOUND_FOR_DELETE => 'Product with specified SKU not found',
         CustomInterface::ERROR_INVALID_QTY => 'Stock data price or quantity value is invalid',
         ValidatorInterface::ERROR_TIER_DATA_INCOMPLETE => 'Stock data is incomplete',
-        ValidatorInterface::ERROR_INVALID_ATTRIBUTE_DECIMAL =>
-            'Value for \'%s\' attribute contains incorrect value, acceptable values are in decimal format',
+        ValidatorInterface::ERROR_INVALID_ATTRIBUTE_DECIMAL => 'Value for \'%s\' attribute contains incorrect value, acceptable values are in decimal format',
     ];
 
     /**
@@ -208,7 +205,6 @@ class Stock extends \Magento\ImportExport\Model\Import\Entity\AbstractEntity
 
     /**
      * Create stock data from raw data.
-     *
      * @throws \Exception
      * @return bool Result of operation.
      */
@@ -217,9 +213,9 @@ class Stock extends \Magento\ImportExport\Model\Import\Entity\AbstractEntity
         if (\Magento\ImportExport\Model\Import::BEHAVIOR_DELETE == $this->getBehavior()) {
             $this->deleteStock();
         } elseif (\Magento\ImportExport\Model\Import::BEHAVIOR_REPLACE == $this->getBehavior()) {
-            $this->replaceStock();
+            $this->saveProductStocks();
         } elseif (\Magento\ImportExport\Model\Import::BEHAVIOR_APPEND == $this->getBehavior()) {
-            $this->saveStock();
+            $this->saveStocks();
         }
 
         return true;
@@ -227,7 +223,6 @@ class Stock extends \Magento\ImportExport\Model\Import\Entity\AbstractEntity
 
     /**
      * Entity type code getter.
-     *
      * @return string
      */
     public function getEntityTypeCode()
@@ -237,7 +232,6 @@ class Stock extends \Magento\ImportExport\Model\Import\Entity\AbstractEntity
 
     /**
      * Row validation.
-     *
      * @param array $rowData
      * @param int $rowNum
      * @return bool
@@ -276,7 +270,7 @@ class Stock extends \Magento\ImportExport\Model\Import\Entity\AbstractEntity
      * @param array $importData
      * @return $this
      */
-    public function deleteStock($importData)
+    public function deleteStock(array $importData = [])
     {
         $this->_cachedSkuToDelete = null;
         $listSku = [];
@@ -290,9 +284,9 @@ class Stock extends \Magento\ImportExport\Model\Import\Entity\AbstractEntity
                 $this->getErrorAggregator()->addRowToSkip($rowNum);
             }
         }
-        
+
         if ($listSku) {
-            $this->deleteProductStocks(array_unique($listSku), self::TABLE_STOCK);
+            $this->deleteStock(array_unique($listSku), self::TABLE_STOCK);
             $this->setUpdatedAt($listSku);
         }
         return $this;
@@ -304,7 +298,7 @@ class Stock extends \Magento\ImportExport\Model\Import\Entity\AbstractEntity
      * @param string $behavior
      * @return void
      */
-    public function saveStocks($importData, $behavior)
+    public function saveStocks(array $importData = [], string $behavior = null)
     {
         $stocks = [];
         $listSku = [];
@@ -342,12 +336,11 @@ class Stock extends \Magento\ImportExport\Model\Import\Entity\AbstractEntity
 
     /**
      * Save product stock.
-     *
      * @param array $priceData
      * @param string $table
      * @return $this
      */
-    protected function saveProductStocks(array $priceData, $table)
+    protected function saveProductStocks(array $priceData = [], string $table = null)
     {
         if ($priceData) {
             $tableName = $this->_resourceFactory->create()->getTable($table);
@@ -371,7 +364,6 @@ class Stock extends \Magento\ImportExport\Model\Import\Entity\AbstractEntity
 
     /**
      * Set updated_at for product
-     *
      * @param array $listSku
      * @return $this
      */
@@ -388,7 +380,6 @@ class Stock extends \Magento\ImportExport\Model\Import\Entity\AbstractEntity
 
     /**
      * Retrieve product skus
-     *
      * @return array
      */
     protected function retrieveOldSkus()
@@ -406,7 +397,6 @@ class Stock extends \Magento\ImportExport\Model\Import\Entity\AbstractEntity
 
     /**
      * Count existing prices
-     *
      * @param array $stocks
      * @param string $table
      * @return $this
@@ -440,7 +430,6 @@ class Stock extends \Magento\ImportExport\Model\Import\Entity\AbstractEntity
 
     /**
      * Increment counter of updated items
-     *
      * @param array $stocks
      * @param array $existingPrice
      * @return void
@@ -454,7 +443,6 @@ class Stock extends \Magento\ImportExport\Model\Import\Entity\AbstractEntity
 
     /**
      * Count new prices
-     *
      * @param array $stocks
      * @return $this
      */
@@ -470,7 +458,6 @@ class Stock extends \Magento\ImportExport\Model\Import\Entity\AbstractEntity
 
     /**
      * Get product entity link field
-     *
      * @return string
      * @throws \Exception
      */
