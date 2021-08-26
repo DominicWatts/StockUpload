@@ -9,8 +9,12 @@
  */
 
 $finder = PhpCsFixer\Finder::create()
+    ->in('Block')
     ->in('Console')
-    ->in('Magento')
+    ->in('Controller')
+    ->in('Helper')
+    ->in('Model')
+    ->in('view')
     ->name('*.phtml');
 
 $config = new PhpCsFixer\Config();
