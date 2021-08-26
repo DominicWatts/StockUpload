@@ -2,7 +2,6 @@
 
 namespace Xigen\StockUpload\Controller\Adminhtml\Import;
 
-use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
 use Magento\Framework\Exception\LocalizedException;
 use Xigen\StockUpload\Model\Import\Stock;

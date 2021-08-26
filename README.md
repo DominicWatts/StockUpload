@@ -6,6 +6,8 @@
 
 ![PHPStan](https://github.com/DominicWatts/StockUpload/workflows/PHPStan/badge.svg)
 
+![php-cs-fixer](https://github.com/DominicWatts/StockUpload/workflows/php-cs-fixer/badge.svg)
+
 # Install instructions #
 
 `composer require dominicwatts/stockupload`
